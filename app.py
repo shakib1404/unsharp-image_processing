@@ -55,6 +55,10 @@ def enhance_image():
     sigma      = float(request.form.get("sigma",      1.0))
     use_srgan  = request.form.get("use_srgan", "true").lower() == "true"
 
+    use_visual_punch        = request.form.get("use_visual_punch", "false").lower() == "true"
+    visual_punch_saturation = float(request.form.get("visual_punch_saturation", 1.6))
+    visual_punch_warmth     = float(request.form.get("visual_punch_warmth",     22.0))
+
     # Decode image
     buf = np.frombuffer(file.read(), np.uint8)
     img = cv2.imdecode(buf, cv2.IMREAD_COLOR)
@@ -72,6 +76,9 @@ def enhance_image():
         cn=cn,
         sigma=sigma,
         use_srgan=use_srgan,
+        use_visual_punch=use_visual_punch,
+        visual_punch_saturation=visual_punch_saturation,
+        visual_punch_warmth=visual_punch_warmth,
     )
 
     # Metrics

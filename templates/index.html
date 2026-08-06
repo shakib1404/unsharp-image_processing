@@ -285,6 +285,35 @@
       </div>
     </div>
 
+    <!-- Visual Punch — explicitly NOT paper-derived, cosmetic-only -->
+    <div style="margin-top:18px;padding-top:16px;border-top:1px dashed var(--border)">
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer">
+        <input type="checkbox" id="visualPunch" onchange="toggleVisualPunch()"
+               style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer" />
+        <span style="font-size:13px;font-weight:600">Visual Punch</span>
+        <span style="font-size:11px;color:var(--muted)">— cosmetic saturation/warmth boost, not derived from the paper</span>
+      </label>
+
+      <div class="params-grid" id="punchParams" style="display:none;margin-top:14px">
+        <div class="param">
+          <label>Saturation Boost</label>
+          <div class="param-row">
+            <input type="range" id="punchSat" min="1" max="2.2" step="0.05" value="1.6"
+                   oninput="V('punchSatV',this.value)" />
+            <span class="val" id="punchSatV">1.6</span>
+          </div>
+        </div>
+        <div class="param">
+          <label>Warmth (+R / &minus;B)</label>
+          <div class="param-row">
+            <input type="range" id="punchWarm" min="0" max="40" step="1" value="22"
+                   oninput="V('punchWarmV',this.value)" />
+            <span class="val" id="punchWarmV">22</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="btn-row">
       <button class="btn btn-primary" id="runBtn" onclick="runEnhance()" disabled>
         ✨ Enhance Image
@@ -415,6 +444,9 @@
     fd.append('clip_limit', $('clipLimit').value);
     fd.append('cn',         $('cn').value);
     fd.append('sigma',      $('sigma').value);
+    fd.append('use_visual_punch',        $('visualPunch').checked);
+    fd.append('visual_punch_saturation', $('punchSat').value);
+    fd.append('visual_punch_warmth',     $('punchWarm').value);
 
     try {
       const res  = await fetch('/enhance', { method:'POST', body:fd });
@@ -483,6 +515,10 @@
     move(r.left + r.width / 2);
   }
 
+  function toggleVisualPunch() {
+    $('punchParams').style.display = $('visualPunch').checked ? 'grid' : 'none';
+  }
+
   /* ── ui helpers ── */
   function setLoading(on) {
     $('runBtn').disabled           = on || !currentFile;
@@ -497,6 +533,8 @@
     $('runBtn').disabled            = true;
     $('previewStrip').style.display = 'none';
     $('results').style.display      = 'none';
+    $('visualPunch').checked        = false;
+    $('punchParams').style.display  = 'none';
     hideErr();
   }
 </script>
