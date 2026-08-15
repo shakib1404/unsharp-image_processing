@@ -16,9 +16,12 @@ straight into enhance.py as 'srgan_v.pth' — no code changes needed there.
 TRAINING RECIPE (self-supervised, since no paired LR/HR ground truth exists)
 ─────────────────────────────────────────────────────────────────────────────
 1. Load an endoscopy RGB image, run it through preprocess_v_channel() (the
-   exact same HSV->normalize->invert->gamma->Hu-WBI->CLAHE->unsharp pipeline
+   exact same HSV->normalize->invert->gamma->CLAHE->Hu-WBI->unsharp pipeline
    enhance.py uses) to get v_sharp — this IS the input SRGAN sees at
-   inference. v_sharp is treated as ground-truth "HR".
+   inference. v_sharp is treated as ground-truth "HR". Because this calls the
+   shared preprocess_intensity()/preprocess_v_channel() functions rather than
+   duplicating the steps, training data automatically tracks any pipeline
+   fix made in enhance.py — no separate change needed here.
 2. Random-crop a patch_size x patch_size patch from v_sharp  ->  HR target.
 3. Synthetically degrade it (Eq. 5: blur + additive noise) and downsample by
    2x  ->  LR input. This is the standard self-supervised SR recipe: the

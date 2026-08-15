@@ -1,0 +1,2 @@
+config,psnr,ssim,entropy,eme,cii,colorfulness,delta_e,sr_actual
+paper default,23.0071,0.8261,7.5643,44.0238,0.9319,61.0521,5.2818,srgan_v

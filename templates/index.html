@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Endoscopy Image Enhancement</title>
+  <title>Endoscopy Image Enhancement — Method Lab</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text y='52' font-size='52'>&#128300;</text></svg>" />
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,6 +16,8 @@
       --border:  #2a3050;
       --accent:  #4f8ef7;
       --green:   #34d399;
+      --amber:   #fbbf24;
+      --purple:  #a78bfa;
       --text:    #e2e8f0;
       --muted:   #7c8aa0;
       --danger:  #f87171;
@@ -48,9 +52,8 @@
     }
 
     /* ── Layout ─────────────────────────────────────────────────────── */
-    .page { max-width: 1300px; margin: 0 auto; padding: 28px 24px; }
+    .page { max-width: 1400px; margin: 0 auto; padding: 24px; }
 
-    /* ── Card ───────────────────────────────────────────────────────── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -63,12 +66,23 @@
       text-transform: uppercase; color: var(--muted);
       margin-bottom: 16px;
     }
+    .card-title .hint { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 8px; }
+
+    /* ── Tabs ───────────────────────────────────────────────────────── */
+    .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .tab {
+      padding: 9px 18px; border-radius: 9px; cursor: pointer;
+      font-size: 13px; font-weight: 600;
+      background: var(--surface); color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
     /* ── Drop zone ───────────────────────────────────────────────────── */
     .drop-zone {
       border: 2px dashed var(--border);
       border-radius: var(--r);
-      padding: 44px 20px;
+      padding: 34px 20px;
       text-align: center;
       cursor: pointer;
       transition: border-color .2s, background .2s;
@@ -79,11 +93,10 @@
       background: rgba(79,142,247,.05);
     }
     .drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .drop-icon { font-size: 38px; margin-bottom: 10px; }
+    .drop-icon { font-size: 34px; margin-bottom: 8px; }
     .drop-zone p { color: var(--muted); font-size: 14px; }
     .drop-zone strong { color: var(--accent); }
 
-    /* preview strip */
     .preview-strip {
       display: none;
       align-items: center; gap: 14px;
@@ -97,20 +110,59 @@
     .preview-strip .fname { font-size: 13px; font-weight: 600; }
     .preview-strip .fsize { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
+    /* ── Stage selectors ─────────────────────────────────────────────── */
+    .stage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .stage {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 15px;
+    }
+    .stage .step {
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--accent);
+    }
+    .stage h4 { font-size: 13px; margin: 5px 0 10px; font-weight: 600; }
+    select {
+      width: 100%;
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 7px;
+      padding: 8px 10px; font-size: 13px; font-family: inherit;
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+    .stage .desc { font-size: 11px; color: var(--muted); margin-top: 9px; line-height: 1.55; min-height: 32px; }
+    .badge-paper {
+      font-size: 9px; font-weight: 700; letter-spacing: .05em;
+      background: rgba(52,211,153,.14); color: var(--green);
+      border: 1px solid rgba(52,211,153,.3);
+      padding: 2px 7px; border-radius: 20px; margin-left: 6px;
+    }
+    .badge-warn {
+      font-size: 9px; font-weight: 700;
+      background: rgba(251,191,36,.13); color: var(--amber);
+      border: 1px solid rgba(251,191,36,.3);
+      padding: 2px 7px; border-radius: 20px; margin-left: 6px;
+    }
+
     /* ── Parameters ──────────────────────────────────────────────────── */
     .params-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
       gap: 16px;
-      margin-top: 18px;
     }
     .param label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block; }
     .param-row   { display: flex; align-items: center; gap: 10px; }
     input[type=range] { flex: 1; accent-color: var(--accent); cursor: pointer; }
     .val { font-size: 13px; font-weight: 700; color: var(--accent); min-width: 38px; text-align: right; }
+    .param.dim { opacity: .35; }
 
     /* ── Buttons ─────────────────────────────────────────────────────── */
-    .btn-row { display: flex; gap: 10px; margin-top: 20px; align-items: center; }
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; align-items: center; flex-wrap: wrap; }
     .btn {
       display: inline-flex; align-items: center; gap: 7px;
       padding: 10px 22px; border-radius: 8px;
@@ -124,6 +176,7 @@
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
     .btn-dl   { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-dl:hover { border-color: var(--green); color: var(--green); }
+    .btn-sm { padding: 5px 11px; font-size: 11px; border-radius: 6px; }
 
     .spinner {
       width: 16px; height: 16px;
@@ -135,8 +188,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Error ───────────────────────────────────────────────────────── */
-    #err {
+    .note {
       display: none;
       background: rgba(248,113,113,.09);
       border: 1px solid rgba(248,113,113,.28);
@@ -146,75 +198,103 @@
       font-size: 13px;
       margin-top: 12px;
     }
+    .note.info {
+      background: rgba(251,191,36,.08);
+      border-color: rgba(251,191,36,.28);
+      color: var(--amber);
+      display: block;
+    }
 
-    /* ── Results ─────────────────────────────────────────────────────── */
-    #results { display: none; }
-
-    /* Metrics row */
-    .metrics-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+    /* ── Metrics ─────────────────────────────────────────────────────── */
+    .metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .metric {
-      flex: 1; min-width: 110px;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 16px 14px; text-align: center;
+      border-radius: 10px;
+      padding: 13px 12px; text-align: center;
+      cursor: help;
     }
-    .metric .m-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-    .metric .m-val   { font-size: 22px; font-weight: 800; color: var(--green); }
-    .metric .m-unit  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .metric .m-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .metric .m-val   { font-size: 20px; font-weight: 800; color: var(--green); }
+    .metric .m-unit  { font-size: 10px; color: var(--muted); margin-top: 3px; }
+    .metric.fr .m-val   { color: var(--accent); }
+    .metric.gain .m-val { color: var(--purple); }
 
-    /* ── Comparison image (main output) ──────────────────────────────── */
-    .comparison-wrap {
-      width: 100%;
-      border-radius: var(--r);
-      overflow: hidden;
-      border: 1px solid var(--border);
+    /* ── Tables ──────────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+    th, td { padding: 9px 11px; text-align: right; white-space: nowrap; }
+    th {
+      font-size: 10px; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--muted); font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--surface);
+      cursor: help;
     }
-    .comparison-wrap img {
-      width: 100%; display: block;
-    }
+    th.sortable { cursor: pointer; }
+    th.sortable:hover { color: var(--accent); }
+    th.first, td.first { text-align: left; }
+    tbody tr { border-bottom: 1px solid rgba(42,48,80,.55); }
+    tbody tr:hover { background: rgba(79,142,247,.05); }
+    td.up   { color: var(--green); }
+    td.down { color: var(--danger); }
+    td.best { background: rgba(52,211,153,.12); font-weight: 700; color: var(--green); }
+    .m-name { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+    .m-name .m-desc { font-size: 10.5px; color: var(--muted); white-space: normal; max-width: 460px; line-height: 1.5; }
+    .row-thumb { width: 54px; height: 54px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
 
-    /* ── Interactive slider ───────────────────────────────────────────── */
+    /* ── Comparison / slider ─────────────────────────────────────────── */
+    .comparison-wrap { width: 100%; border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); }
+    .comparison-wrap img { width: 100%; display: block; }
+
     .slider-wrap {
-      position: relative;
-      width: 100%; overflow: hidden;
-      border-radius: var(--r);
-      cursor: ew-resize;
-      user-select: none;
+      position: relative; width: 100%; overflow: hidden;
+      border-radius: var(--r); cursor: ew-resize; user-select: none;
       border: 1px solid var(--border);
     }
     .slider-wrap .base-img { display: block; width: 100%; }
-    .slider-overlay {
-      position: absolute; top: 0; left: 0;
-      width: 50%; height: 100%;
-      overflow: hidden;
-    }
+    .slider-overlay { position: absolute; top: 0; left: 0; width: 50%; height: 100%; overflow: hidden; }
     .slider-overlay img { position: absolute; top: 0; left: 0; width: 100%; max-width: none; display: block; }
-    .slider-line {
-      position: absolute; top: 0; bottom: 0;
-      left: 50%; width: 2px;
-      background: rgba(255,255,255,.9);
-      transform: translateX(-50%);
-      pointer-events: none;
-    }
+    .slider-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(255,255,255,.9); transform: translateX(-50%); pointer-events: none; }
     .slider-knob {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%,-50%);
-      width: 40px; height: 40px;
-      background: #fff; border-radius: 50%;
+      width: 40px; height: 40px; background: #fff; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 15px; color: #333;
-      box-shadow: 0 2px 10px rgba(0,0,0,.5);
+      font-size: 15px; color: #333; box-shadow: 0 2px 10px rgba(0,0,0,.5);
       pointer-events: none;
     }
-    .slider-captions {
-      display: flex; justify-content: space-between;
-      padding: 6px 2px;
-      font-size: 12px; color: var(--muted);
-    }
+    .slider-captions { display: flex; justify-content: space-between; padding: 6px 2px; font-size: 12px; color: var(--muted); }
 
-    /* ── Download row ─────────────────────────────────────────────────── */
     .dl-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .config-line {
+      font-size: 12px; color: var(--muted); line-height: 1.9;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 9px; padding: 11px 14px; margin-bottom: 16px;
+    }
+    .config-line b { color: var(--text); font-weight: 600; }
+
+    /* ── Sweep axis pickers ──────────────────────────────────────────── */
+    .axis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    .axis {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 13px 14px;
+    }
+    .axis h4 { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+    .axis .sub { font-size: 10.5px; color: var(--muted); margin-bottom: 10px; }
+    .axis .opts { max-height: 230px; overflow-y: auto; }
+    .opt {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 4px 0; font-size: 12px; cursor: pointer;
+    }
+    .opt input { margin-top: 2px; accent-color: var(--accent); cursor: pointer; }
+    .opt.disabled { opacity: .4; cursor: not-allowed; }
+    .axis .axis-btns { display: flex; gap: 6px; margin-top: 9px; }
+    .combo-count { font-size: 12.5px; color: var(--muted); margin-top: 14px; }
+    .combo-count b { color: var(--accent); }
+    .combo-count.over b { color: var(--amber); }
+
+    #results, #sweepResults { display: none; }
   </style>
 </head>
 <body>
@@ -222,15 +302,15 @@
 <header>
   <div class="logo">🔬</div>
   <div class="info">
-    <h1>Endoscopy Image Enhancement</h1>
-    <p>CLAHE + Hu-WBI + Unsharp Masking &mdash; Jagarajan &amp; Jayaraman (2026)</p>
+    <h1>Endoscopy Image Enhancement — Method Lab</h1>
+    <p>Swap every stage (colour space · upsampling · contrast · super-resolution) and measure the result</p>
   </div>
-  <span class="pill">Multimedia Tools &amp; Applications</span>
+  <span class="pill">Jagarajan &amp; Jayaraman (2026)</span>
 </header>
 
 <div class="page">
 
-  <!-- ── Upload card ── -->
+  <!-- ── Upload (shared by both modes) ── -->
   <div class="card">
     <div class="card-title">Input Image</div>
 
@@ -248,165 +328,421 @@
         <div class="fsize" id="previewSize"></div>
       </div>
     </div>
+  </div>
 
-    <!-- Parameters -->
-    <div class="params-grid">
-      <div class="param">
-        <label>Gamma (γ) &mdash; intensity curve</label>
-        <div class="param-row">
-          <input type="range" id="gamma" min="0.3" max="1.5" step="0.05" value="0.8"
-                 oninput="V('gammaV',this.value)" />
-          <span class="val" id="gammaV">0.8</span>
-        </div>
+  <div class="tabs">
+    <div class="tab active" id="tabSingle" onclick="switchTab('single')">▶ Single run</div>
+    <div class="tab"        id="tabSweep"  onclick="switchTab('sweep')">⚖ Compare all variants</div>
+  </div>
+
+  <!-- ═══════════════════ SINGLE RUN ═══════════════════ -->
+  <div id="modeSingle">
+
+    <div class="card">
+      <div class="card-title">Pipeline stages
+        <span class="hint">— each stage is swappable; the paper's own choice is marked</span>
       </div>
-      <div class="param">
-        <label>CLAHE Clip Limit</label>
-        <div class="param-row">
-          <input type="range" id="clipLimit" min="0.5" max="8" step="0.5" value="2"
-                 oninput="V('clipV',this.value)" />
-          <span class="val" id="clipV">2</span>
+      <div class="stage-grid">
+        <div class="stage">
+          <div class="step">Step 1 — colour space</div>
+          <h4>Intensity channel source</h4>
+          <select id="colorSpace" onchange="onStageChange()"></select>
+          <div class="desc" id="colorSpaceDesc"></div>
         </div>
-      </div>
-      <div class="param">
-        <label>Sharpness C<sub>n</sub> (0.7–0.95)</label>
-        <div class="param-row">
-          <input type="range" id="cn" min="0.5" max="1.2" step="0.05" value="0.85"
-                 oninput="V('cnV',this.value)" />
-          <span class="val" id="cnV">0.85</span>
+        <div class="stage">
+          <div class="step">Step 5 — upsampling</div>
+          <h4>2× interpolation (Hu-WBI slot)</h4>
+          <select id="upsampleMethod" onchange="onStageChange()"></select>
+          <div class="desc" id="upsampleMethodDesc"></div>
         </div>
-      </div>
-      <div class="param">
-        <label>Gaussian &sigma; (LPF blur)</label>
-        <div class="param-row">
-          <input type="range" id="sigma" min="0.3" max="3" step="0.1" value="1"
-                 oninput="V('sigmaV',this.value)" />
-          <span class="val" id="sigmaV">1</span>
+        <div class="stage">
+          <div class="step">Step 6 — contrast</div>
+          <h4>Histogram / contrast method (CLAHE slot)</h4>
+          <select id="contrastMethod" onchange="onStageChange()"></select>
+          <div class="desc" id="contrastMethodDesc"></div>
+        </div>
+        <div class="stage">
+          <div class="step">Step 9 — super-resolution</div>
+          <h4>SR model (SRGAN slot)</h4>
+          <select id="srMethod" onchange="onStageChange()"></select>
+          <div class="desc" id="srMethodDesc"></div>
         </div>
       </div>
     </div>
 
-    <!-- Visual Punch — explicitly NOT paper-derived, cosmetic-only -->
-    <div style="margin-top:18px;padding-top:16px;border-top:1px dashed var(--border)">
-      <label style="display:flex;align-items:center;gap:9px;cursor:pointer">
-        <input type="checkbox" id="visualPunch" onchange="toggleVisualPunch()"
-               style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer" />
-        <span style="font-size:13px;font-weight:600">Visual Punch</span>
-        <span style="font-size:11px;color:var(--muted)">— cosmetic saturation/warmth boost, not derived from the paper</span>
-      </label>
+    <div class="card">
+      <div class="card-title">Parameters
+        <span class="hint">— greyed-out sliders do not affect the currently selected methods</span>
+      </div>
+      <div class="params-grid">
+        <div class="param" id="p_gamma">
+          <label>Gamma (γ) — Step 4 intensity curve</label>
+          <div class="param-row">
+            <input type="range" id="gamma" min="0.3" max="1.5" step="0.05" value="0.8" oninput="V('gammaV',this.value)" />
+            <span class="val" id="gammaV">0.8</span>
+          </div>
+        </div>
+        <div class="param" id="p_clip">
+          <label>CLAHE clip limit</label>
+          <div class="param-row">
+            <input type="range" id="clipLimit" min="0.5" max="8" step="0.5" value="2" oninput="V('clipV',this.value)" />
+            <span class="val" id="clipV">2</span>
+          </div>
+        </div>
+        <div class="param" id="p_tile">
+          <label>CLAHE tile grid (N×N)</label>
+          <div class="param-row">
+            <input type="range" id="tileSize" min="2" max="32" step="1" value="8" oninput="V('tileV',this.value)" />
+            <span class="val" id="tileV">8</span>
+          </div>
+        </div>
+        <div class="param" id="p_agcwd">
+          <label>AGCWD α (weighting exponent)</label>
+          <div class="param-row">
+            <input type="range" id="agcwdAlpha" min="0.1" max="1.5" step="0.05" value="0.5" oninput="V('agcwdV',this.value)" />
+            <span class="val" id="agcwdV">0.5</span>
+          </div>
+        </div>
+        <div class="param" id="p_tophat">
+          <label>Top-hat kernel size</label>
+          <div class="param-row">
+            <input type="range" id="tophatK" min="3" max="41" step="2" value="15" oninput="V('tophatV',this.value)" />
+            <span class="val" id="tophatV">15</span>
+          </div>
+        </div>
+        <div class="param" id="p_cn">
+          <label>Sharpness C<sub>n</sub> — Step 8 unsharp</label>
+          <div class="param-row">
+            <input type="range" id="cn" min="0.5" max="1.2" step="0.05" value="0.85" oninput="V('cnV',this.value)" />
+            <span class="val" id="cnV">0.85</span>
+          </div>
+        </div>
+        <div class="param" id="p_sigma">
+          <label>Gaussian σ (LPF blur)</label>
+          <div class="param-row">
+            <input type="range" id="sigma" min="0.3" max="3" step="0.1" value="1" oninput="V('sigmaV',this.value)" />
+            <span class="val" id="sigmaV">1</span>
+          </div>
+        </div>
+        <div class="param" id="p_ct">
+          <label>Colour transfer strength (Eq. 6)</label>
+          <div class="param-row">
+            <input type="range" id="ctStrength" min="0" max="1" step="0.05" value="1.0" oninput="V('ctV',this.value)" />
+            <span class="val" id="ctV">1.0</span>
+          </div>
+        </div>
+        <div class="param">
+          <label>Working resolution (square)</label>
+          <div class="param-row">
+            <select id="workSize">
+              <option value="256">256 × 256 (fast)</option>
+              <option value="512" selected>512 × 512 (paper)</option>
+              <option value="768">768 × 768</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);display:flex;flex-wrap:wrap;gap:22px">
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer">
+          <input type="checkbox" id="useColorTransfer" checked style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer" />
+          <span style="font-size:13px;font-weight:600">Colour transfer (Eq. 6)</span>
+          <span style="font-size:11px;color:var(--muted)">— matches output colour statistics back to the input</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer">
+          <input type="checkbox" id="visualPunch" onchange="toggleVisualPunch()" style="width:15px;height:15px;accent-color:var(--danger);cursor:pointer" />
+          <span style="font-size:13px;font-weight:600">Visual punch</span>
+          <span style="font-size:11px;color:var(--muted)">— cosmetic saturation/warmth boost, not derived from the paper</span>
+        </label>
+      </div>
 
       <div class="params-grid" id="punchParams" style="display:none;margin-top:14px">
         <div class="param">
-          <label>Saturation Boost</label>
+          <label>Saturation boost</label>
           <div class="param-row">
-            <input type="range" id="punchSat" min="1" max="2.2" step="0.05" value="1.6"
-                   oninput="V('punchSatV',this.value)" />
+            <input type="range" id="punchSat" min="1" max="2.2" step="0.05" value="1.6" oninput="V('punchSatV',this.value)" />
             <span class="val" id="punchSatV">1.6</span>
           </div>
         </div>
         <div class="param">
-          <label>Warmth (+R / &minus;B)</label>
+          <label>Warmth (+R / −B)</label>
           <div class="param-row">
-            <input type="range" id="punchWarm" min="0" max="40" step="1" value="22"
-                   oninput="V('punchWarmV',this.value)" />
+            <input type="range" id="punchWarm" min="0" max="40" step="1" value="22" oninput="V('punchWarmV',this.value)" />
             <span class="val" id="punchWarmV">22</span>
           </div>
         </div>
       </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="runBtn" onclick="runEnhance()" disabled>
+          ✨ Enhance &amp; measure
+          <div class="spinner" id="spinner"></div>
+        </button>
+        <button class="btn btn-ghost" onclick="resetStages()">Reset to paper defaults</button>
+      </div>
+      <div class="note" id="err"></div>
     </div>
 
-    <div class="btn-row">
-      <button class="btn btn-primary" id="runBtn" onclick="runEnhance()" disabled>
-        ✨ Enhance Image
-        <div class="spinner" id="spinner"></div>
-      </button>
-      <button class="btn btn-ghost" onclick="reset()">Reset</button>
-    </div>
+    <!-- ── Results ── -->
+    <div id="results">
+      <div class="card">
+        <div class="card-title">Configuration that ran</div>
+        <div class="config-line" id="configLine"></div>
 
-    <div id="err"></div>
-  </div><!-- /upload card -->
+        <div class="card-title">Full-reference metrics
+          <span class="hint">— enhanced vs original: fidelity, not quality. A no-op scores perfectly here.</span>
+        </div>
+        <div class="metrics-row" id="frMetrics"></div>
 
+        <div class="card-title">Enhancement gain
+          <span class="hint">— enhanced ÷ original: this is where a good enhancement actually shows up</span>
+        </div>
+        <div class="metrics-row" id="gainMetrics"></div>
 
-  <!-- ── Results ── -->
-  <div id="results">
-
-    <!-- Metrics -->
-    <div class="metrics-row">
-      <div class="metric">
-        <div class="m-label">PSNR</div>
-        <div class="m-val" id="mPSNR">—</div>
-        <div class="m-unit">dB</div>
+        <div class="card-title">No-reference measures — original vs enhanced</div>
+        <div class="table-wrap">
+          <table id="nrTable">
+            <thead>
+              <tr>
+                <th class="first">Metric</th>
+                <th>Original</th>
+                <th>Enhanced</th>
+                <th>Change</th>
+                <th class="first">Better</th>
+              </tr>
+            </thead>
+            <tbody id="nrBody"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="metric">
-        <div class="m-label">SSIM</div>
-        <div class="m-val" id="mSSIM">—</div>
-        <div class="m-unit">higher = better</div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;font-weight:700">Image &amp; histogram comparison</span>
+          <span style="font-size:11px;color:var(--muted)" id="elapsedNote"></span>
+        </div>
+        <div class="comparison-wrap">
+          <img id="compImg" src="" alt="comparison" />
+        </div>
       </div>
-      <div class="metric">
-        <div class="m-label">MSE</div>
-        <div class="m-val" id="mMSE">—</div>
-        <div class="m-unit">lower = better</div>
+
+      <div class="card">
+        <div class="card-title">Interactive drag comparison</div>
+        <div class="slider-wrap" id="sliderWrap">
+          <img class="base-img" id="sliderBase" src="" alt="enhanced" />
+          <div class="slider-overlay" id="sliderOverlay">
+            <img id="sliderTop" src="" alt="original" />
+          </div>
+          <div class="slider-line" id="sliderLine"></div>
+          <div class="slider-knob" id="sliderKnob">⇔</div>
+        </div>
+        <div class="slider-captions">
+          <span>◀ Original</span>
+          <span>Enhanced ▶</span>
+        </div>
       </div>
-      <div class="metric" style="flex:2;text-align:left">
-        <div class="m-label">Pipeline</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.9;margin-top:4px">
-          RGB &rarr; HSV &nbsp;|&nbsp; Normalize + Invert V &nbsp;|&nbsp;
-          Gamma &nbsp;|&nbsp; Hu-WBI 2&times; upsample &nbsp;|&nbsp;
-          CLAHE &nbsp;|&nbsp; Downsample &nbsp;|&nbsp;
-          Unsharp Mask (HPF) &nbsp;|&nbsp; Invert &rarr; RGB
+
+      <div class="card">
+        <div class="card-title">Download</div>
+        <div class="dl-row">
+          <a id="dlEnhanced"   href="#" class="btn btn-dl">⬇ Enhanced image (.png)</a>
+          <a id="dlComparison" href="#" class="btn btn-dl">⬇ Comparison figure (.png)</a>
+          <a id="dlMetrics"    href="#" class="btn btn-dl">⬇ All metrics (.csv)</a>
         </div>
       </div>
     </div>
+  </div><!-- /single -->
 
-    <!-- ── MAIN: Comparison image (images + histograms in one frame) ── -->
-    <div class="card" style="padding:0;overflow:hidden">
-      <div style="padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:13px;font-weight:700">Image &amp; Histogram Comparison</span>
-        <span style="font-size:11px;color:var(--muted)">Generated by enhancement pipeline</span>
-      </div>
-      <div class="comparison-wrap">
-        <img id="compImg" src="" alt="comparison" />
-      </div>
-    </div>
-
-    <!-- ── Interactive slider ── -->
+  <!-- ═══════════════════ SWEEP ═══════════════════ -->
+  <div id="modeSweep" style="display:none">
     <div class="card">
-      <div class="card-title">Interactive Drag Comparison</div>
-      <div class="slider-wrap" id="sliderWrap">
-        <img class="base-img" id="sliderBase" src="" alt="enhanced" />
-        <div class="slider-overlay" id="sliderOverlay">
-          <img id="sliderTop" src="" alt="original" />
+      <div class="card-title">Select the variants to run
+        <span class="hint">— every selected combination is run on the same image and measured</span>
+      </div>
+      <div class="axis-grid">
+        <div class="axis">
+          <h4>Step 1 — colour space</h4>
+          <div class="sub">Which channel carries the intensity</div>
+          <div class="opts" id="axColorSpace"></div>
+          <div class="axis-btns">
+            <button class="btn btn-ghost btn-sm" onclick="axisAll('axColorSpace',true)">All</button>
+            <button class="btn btn-ghost btn-sm" onclick="axisAll('axColorSpace',false)">None</button>
+          </div>
         </div>
-        <div class="slider-line"  id="sliderLine"></div>
-        <div class="slider-knob" id="sliderKnob">⇔</div>
+        <div class="axis">
+          <h4>Step 5 — upsampling</h4>
+          <div class="sub">Hu-WBI and its alternatives</div>
+          <div class="opts" id="axUpsample"></div>
+          <div class="axis-btns">
+            <button class="btn btn-ghost btn-sm" onclick="axisAll('axUpsample',true)">All</button>
+            <button class="btn btn-ghost btn-sm" onclick="axisAll('axUpsample',false)">None</button>
+          </div>
+        </div>
+        <div class="axis">
+          <h4>Step 6 — contrast</h4>
+          <div class="sub">CLAHE and its relatives</div>
+          <div class="opts" id="axContrast"></div>
+          <div class="axis-btns">
+            <button class="btn btn-ghost btn-sm" onclick="axisAll('axContrast',true)">All</button>
+            <button class="btn btn-ghost btn-sm" onclick="axisAll('axContrast',false)">None</button>
+          </div>
+        </div>
+        <div class="axis">
+          <h4>Step 9 — super-resolution</h4>
+          <div class="sub">SRGAN and non-learned baselines</div>
+          <div class="opts" id="axSR"></div>
+          <div class="axis-btns">
+            <button class="btn btn-ghost btn-sm" onclick="axisAll('axSR',true)">All</button>
+            <button class="btn btn-ghost btn-sm" onclick="axisAll('axSR',false)">None</button>
+          </div>
+        </div>
       </div>
-      <div class="slider-captions">
-        <span>◀ Original</span>
-        <span>Enhanced ▶</span>
+
+      <div class="params-grid" style="margin-top:18px">
+        <div class="param">
+          <label>Working resolution for the sweep</label>
+          <div class="param-row">
+            <select id="sweepSize">
+              <option value="192">192 × 192 (fastest)</option>
+              <option value="256" selected>256 × 256</option>
+              <option value="384">384 × 384</option>
+              <option value="512">512 × 512 (paper, slow)</option>
+            </select>
+          </div>
+        </div>
       </div>
+
+      <div class="combo-count" id="comboCount"></div>
+      <div class="note info" id="sweepHint">
+        The sliders from the Single-run tab (γ, clip limit, C<sub>n</sub>, σ, …) apply to every row, so rows differ only
+        by the methods selected here. SRGAN rows cost seconds each on CPU — keep them out until the rest looks right.
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="sweepBtn" onclick="runSweep()" disabled>
+          ⚖ Run sweep &amp; build metric table
+          <div class="spinner" id="sweepSpinner"></div>
+        </button>
+        <button class="btn btn-ghost" onclick="presetPaperVsRest()">Preset: paper vs each alternative</button>
+      </div>
+      <div class="note" id="sweepErr"></div>
     </div>
 
-    <!-- ── Download ── -->
-    <div class="card">
-      <div class="card-title">Download</div>
-      <div class="dl-row">
-        <a id="dlEnhanced"   href="#" class="btn btn-dl" download="enhanced.png">
-          ⬇ Enhanced Image (.png)
-        </a>
-        <a id="dlComparison" href="#" class="btn btn-dl" download="comparison.png">
-          ⬇ Comparison Image (.png)
-        </a>
+    <div id="sweepResults">
+      <div class="card">
+        <div class="card-title">Results
+          <span class="hint" id="sweepMeta"></span>
+        </div>
+        <div class="table-wrap">
+          <table id="sweepTable">
+            <thead id="sweepHead"></thead>
+            <tbody id="sweepBody"></tbody>
+          </table>
+        </div>
+        <div class="dl-row" style="margin-top:18px">
+          <a id="dlSweepCsv" href="#" class="btn btn-dl">⬇ Full metric table (.csv)</a>
+        </div>
       </div>
     </div>
+  </div><!-- /sweep -->
 
-  </div><!-- /results -->
 </div><!-- /page -->
 
 <script>
-  /* ── helpers ── */
   const $ = id => document.getElementById(id);
   const V = (id, v) => $(id).textContent = v;
 
   let currentFile = null;
+  let OPTIONS     = null;
+  let sweepRows   = [];
+  let lastSweep   = null;
+  let sortState   = { key: null, dir: -1 };
+
+  const DEFAULTS = { color_space:'hsv', upsample_method:'hu_wbi', contrast_method:'clahe', sr_method:'auto' };
+  const PAPER    = { color_space:'hsv', upsample_method:'hu_wbi', contrast_method:'clahe', sr_method:'srgan_v' };
+
+  /* Columns of the sweep table: [flat metric key, header, decimals] */
+  const SWEEP_COLS = [
+    ['psnr','PSNR',2], ['ssim','SSIM',4], ['mse','MSE',1], ['rmse','RMSE',2],
+    ['mae','MAE',2], ['ambe','AMBE',2], ['ncc','NCC',4], ['uqi','UQI',4],
+    ['enhanced_entropy','Entropy',3], ['enhanced_contrast','Contrast σ',2],
+    ['enhanced_eme','EME',2], ['enhanced_avg_gradient','Avg. grad',2],
+    ['enhanced_laplacian_var','Lap. var',1], ['enhanced_colorfulness','Colourful',2],
+    ['enhanced_edge_density','Edge %',3], ['enhanced_michelson','Michelson',3],
+    ['cii','CII',3], ['entropy_gain','Ent. gain',3], ['sharpness_gain','Sharp gain',3],
+    ['eme_gain','EME gain',3]
+  ];
+
+  /* ── bootstrap ── */
+  fetch('/options').then(r => r.json()).then(o => { OPTIONS = o; buildSelectors(); buildAxes(); onStageChange(); updateComboCount(); });
+
+  function buildSelectors() {
+    fill('colorSpace',     OPTIONS.color_spaces,     DEFAULTS.color_space);
+    fill('upsampleMethod', OPTIONS.upsample_methods, DEFAULTS.upsample_method);
+    fill('contrastMethod', OPTIONS.contrast_methods, DEFAULTS.contrast_method);
+    fill('srMethod',       OPTIONS.sr_methods,       DEFAULTS.sr_method);
+  }
+
+  function fill(selectId, items, def) {
+    const sel = $(selectId);
+    sel.innerHTML = '';
+    items.forEach(it => {
+      const o = document.createElement('option');
+      o.value = it.id;
+      o.textContent = it.label + (it.available === false ? '  (weights missing)' : '');
+      if (it.id === def) o.selected = true;
+      sel.appendChild(o);
+    });
+  }
+
+  function describe(items, id) {
+    const it = items.find(x => x.id === id);
+    if (!it) return '';
+    let txt = it.desc;
+    if (id === PAPER[keyOf(items)]) txt += ' <span class="badge-paper">PAPER</span>';
+    if (it.available === false) txt += ' <span class="badge-warn">weights missing → falls back to Lanczos + detail</span>';
+    return txt;
+  }
+  function keyOf(items) {
+    if (items === OPTIONS.color_spaces)     return 'color_space';
+    if (items === OPTIONS.upsample_methods) return 'upsample_method';
+    if (items === OPTIONS.contrast_methods) return 'contrast_method';
+    return 'sr_method';
+  }
+
+  function onStageChange() {
+    if (!OPTIONS) return;
+    $('colorSpaceDesc').innerHTML     = describe(OPTIONS.color_spaces,     $('colorSpace').value);
+    $('upsampleMethodDesc').innerHTML = describe(OPTIONS.upsample_methods, $('upsampleMethod').value);
+    $('contrastMethodDesc').innerHTML = describe(OPTIONS.contrast_methods, $('contrastMethod').value);
+    $('srMethodDesc').innerHTML       = describe(OPTIONS.sr_methods,       $('srMethod').value);
+
+    /* dim the sliders that the current selection ignores */
+    const cm = $('contrastMethod').value;
+    dim('p_clip',   cm === 'clahe' || cm === 'clahe_sk');
+    dim('p_tile',   cm === 'clahe');
+    dim('p_agcwd',  cm === 'agcwd');
+    dim('p_tophat', cm === 'tophat');
+    dim('p_ct',     $('useColorTransfer').checked);
+  }
+  function dim(id, active) { $(id).classList.toggle('dim', !active); }
+
+  function resetStages() {
+    $('colorSpace').value     = DEFAULTS.color_space;
+    $('upsampleMethod').value = DEFAULTS.upsample_method;
+    $('contrastMethod').value = DEFAULTS.contrast_method;
+    $('srMethod').value       = DEFAULTS.sr_method;
+    onStageChange();
+  }
+
+  /* ── tabs ── */
+  function switchTab(mode) {
+    const single = mode === 'single';
+    $('modeSingle').style.display = single ? 'block' : 'none';
+    $('modeSweep').style.display  = single ? 'none'  : 'block';
+    $('tabSingle').classList.toggle('active', single);
+    $('tabSweep').classList.toggle('active', !single);
+  }
 
   /* ── drag & drop ── */
   const dz = $('dropZone'), fi = $('fileInput');
@@ -414,16 +750,15 @@
   dz.addEventListener('dragleave', () => dz.classList.remove('over'));
   dz.addEventListener('drop', e => {
     e.preventDefault(); dz.classList.remove('over');
-    const f = e.dataTransfer.files[0];
-    if (f) setFile(f);
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
   });
   fi.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]); });
 
   function setFile(f) {
     currentFile = f;
     $('runBtn').disabled = false;
-    hideErr();
-    // preview
+    $('sweepBtn').disabled = false;
+    hide('err'); hide('sweepErr');
     const strip = $('previewStrip');
     strip.style.display = 'flex';
     $('previewName').textContent = f.name;
@@ -433,84 +768,285 @@
     r.readAsDataURL(f);
   }
 
-  /* ── enhance ── */
-  async function runEnhance() {
-    if (!currentFile) return;
-    setLoading(true); hideErr();
-
+  /* ── shared form fields ── */
+  function baseFormData() {
     const fd = new FormData();
-    fd.append('image',      currentFile);
-    fd.append('gamma',      $('gamma').value);
-    fd.append('clip_limit', $('clipLimit').value);
-    fd.append('cn',         $('cn').value);
-    fd.append('sigma',      $('sigma').value);
+    fd.append('image',       currentFile);
+    fd.append('gamma',       $('gamma').value);
+    fd.append('clip_limit',  $('clipLimit').value);
+    fd.append('tile_size',   $('tileSize').value);
+    fd.append('cn',          $('cn').value);
+    fd.append('sigma',       $('sigma').value);
+    fd.append('agcwd_alpha', $('agcwdAlpha').value);
+    fd.append('tophat_ksize',$('tophatK').value);
+    fd.append('use_color_transfer',      $('useColorTransfer').checked);
+    fd.append('color_transfer_strength', $('ctStrength').value);
     fd.append('use_visual_punch',        $('visualPunch').checked);
     fd.append('visual_punch_saturation', $('punchSat').value);
     fd.append('visual_punch_warmth',     $('punchWarm').value);
+    return fd;
+  }
+
+  /* ── single run ── */
+  async function runEnhance() {
+    if (!currentFile) return;
+    loading('runBtn','spinner',true); hide('err');
+
+    const fd = baseFormData();
+    fd.append('color_space',     $('colorSpace').value);
+    fd.append('upsample_method', $('upsampleMethod').value);
+    fd.append('contrast_method', $('contrastMethod').value);
+    fd.append('sr_method',       $('srMethod').value);
+    fd.append('use_srgan',       $('srMethod').value !== 'none');
+    fd.append('work_size',       $('workSize').value);
 
     try {
       const res  = await fetch('/enhance', { method:'POST', body:fd });
       const data = await res.json();
-      if (!res.ok) { showErr(data.error || 'Server error'); return; }
+      if (!res.ok) { showErr('err', data.error || 'Server error'); return; }
       render(data);
     } catch(e) {
-      showErr('Network error: ' + e.message);
+      showErr('err', 'Network error: ' + e.message);
     } finally {
-      setLoading(false);
+      loading('runBtn','spinner',false);
     }
+  }
+
+  function metricCard(key, value, cls) {
+    const info = OPTIONS.metric_info[key] || {};
+    const dirTxt = info.better === 'higher' ? 'higher is better'
+                 : info.better === 'lower'  ? 'lower is better'
+                 : 'read in context';
+    return `<div class="metric ${cls}" title="${(info.desc||'').replace(/"/g,'&quot;')}">
+              <div class="m-label">${info.label || key}</div>
+              <div class="m-val">${value}</div>
+              <div class="m-unit">${info.unit ? info.unit + ' · ' : ''}${dirTxt}</div>
+            </div>`;
   }
 
   function render(d) {
     const origSrc = 'data:image/png;base64,' + d.original;
     const enhSrc  = 'data:image/png;base64,' + d.enhanced;
-    const cmpSrc  = 'data:image/png;base64,' + d.comparison;
+    const m = d.metrics, c = d.config;
 
-    /* metrics */
-    $('mPSNR').textContent = d.metrics.psnr;
-    $('mSSIM').textContent = d.metrics.ssim;
-    $('mMSE').textContent  = d.metrics.mse;
+    /* config summary */
+    const label = (items, id) => (items.find(x => x.id === id) || {}).label || id;
+    let cfg = `<b>Colour space:</b> ${label(OPTIONS.color_spaces, c.color_space)} &nbsp;|&nbsp;
+               <b>Upsample:</b> ${label(OPTIONS.upsample_methods, c.upsample_method)} &nbsp;|&nbsp;
+               <b>Contrast:</b> ${label(OPTIONS.contrast_methods, c.contrast_method)} &nbsp;|&nbsp;
+               <b>SR:</b> ${label(OPTIONS.sr_methods, c.sr_actual)}`;
+    if (c.sr_method === 'auto') cfg += ` <span class="badge-paper">auto-selected</span>`;
+    if (c.sr_fallback) cfg += ` <span class="badge-warn">requested “${c.sr_method}” — weights missing, fell back</span>`;
+    cfg += `<br>γ=${c.gamma} · clip=${c.clip_limit} · C<sub>n</sub>=${c.cn} · σ=${c.sigma}
+            · colour transfer: ${c.color_transfer ? 'on' : 'off'} · visual punch: ${c.visual_punch ? 'on' : 'off'}`;
+    $('configLine').innerHTML = cfg;
+    $('elapsedNote').textContent = `pipeline ran in ${d.elapsed}s`;
 
-    /* comparison image — main output */
-    $('compImg').src = cmpSrc;
+    /* full-reference cards */
+    const frKeys = ['psnr','ssim','mse','rmse','mae','ambe','ncc','uqi','delta_e'];
+    $('frMetrics').innerHTML = frKeys.filter(k => k in m)
+      .map(k => metricCard(k, m[k], 'fr')).join('');
 
-    /* slider */
+    /* gain cards — fixed order: contrast, information, detail, local contrast, colour */
+    const gainKeys = ['cii','entropy_gain','sharpness_gain','eme_gain','colorfulness_gain'];
+    $('gainMetrics').innerHTML = gainKeys.filter(k => k in m.gain)
+      .map(k => metricCard(k, m.gain[k], 'gain')).join('');
+
+    /* no-reference table */
+    $('nrBody').innerHTML = Object.keys(m.enhanced).map(k => {
+      const info = OPTIONS.metric_info[k] || {};
+      const o = m.original[k], e = m.enhanced[k];
+      const delta = e - o;
+      const pct   = o !== 0 ? (delta / Math.abs(o) * 100) : 0;
+      const good  = info.better === 'higher' ? delta > 0
+                  : info.better === 'lower'  ? delta < 0 : null;
+      const cls   = good === null ? '' : (good ? 'up' : 'down');
+      const dirTxt = info.better === 'higher' ? '↑ higher'
+                   : info.better === 'lower'  ? '↓ lower' : '— context';
+      return `<tr>
+        <td class="first"><div class="m-name"><span>${info.label || k}</span>
+          <span class="m-desc">${info.desc || ''}</span></div></td>
+        <td>${o.toFixed(3)}</td>
+        <td>${e.toFixed(3)}</td>
+        <td class="${cls}">${delta >= 0 ? '+' : ''}${delta.toFixed(3)}
+            <span style="color:var(--muted);font-size:11px">(${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%)</span></td>
+        <td class="first" style="color:var(--muted);font-size:11.5px">${dirTxt}</td>
+      </tr>`;
+    }).join('');
+
+    $('compImg').src    = 'data:image/png;base64,' + d.comparison;
     $('sliderBase').src = enhSrc;
     $('sliderTop').src  = origSrc;
     initSlider();
 
-    /* download links */
     $('dlEnhanced').href   = '/download/' + d.dl_enhanced;
     $('dlComparison').href = '/download/' + d.dl_comparison;
+    $('dlMetrics').href    = '/download/' + d.dl_metrics;
 
     $('results').style.display = 'block';
     $('results').scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
+  /* ── sweep axes ── */
+  function buildAxes() {
+    axis('axColorSpace', OPTIONS.color_spaces,     ['hsv','yiq']);
+    axis('axUpsample',   OPTIONS.upsample_methods, ['hu_wbi']);
+    axis('axContrast',   OPTIONS.contrast_methods, ['clahe','he','agcwd']);
+    axis('axSR',         OPTIONS.sr_methods,       ['none']);
+  }
+
+  function axis(containerId, items, checked) {
+    $(containerId).innerHTML = items.map(it => {
+      const off = it.available === false;
+      return `<label class="opt ${off ? 'disabled' : ''}" title="${(it.desc||'').replace(/"/g,'&quot;')}">
+                <input type="checkbox" value="${it.id}" ${checked.includes(it.id) ? 'checked' : ''}
+                       ${off ? 'disabled' : ''} onchange="updateComboCount()" />
+                <span>${it.label}${off ? ' <span class="badge-warn">no weights</span>' : ''}</span>
+              </label>`;
+    }).join('');
+  }
+
+  function axisValues(containerId) {
+    return [...$(containerId).querySelectorAll('input:checked')].map(i => i.value);
+  }
+  function axisAll(containerId, on) {
+    $(containerId).querySelectorAll('input:not([disabled])').forEach(i => i.checked = on);
+    updateComboCount();
+  }
+
+  function updateComboCount() {
+    if (!OPTIONS) return;
+    const n = ['axColorSpace','axUpsample','axContrast','axSR']
+      .map(id => Math.max(axisValues(id).length, 1))
+      .reduce((a, b) => a * b, 1);
+    const cap = OPTIONS.max_sweep_runs;
+    const el  = $('comboCount');
+    el.classList.toggle('over', n > cap);
+    el.innerHTML = n > cap
+      ? `<b>${n} combinations selected</b> — only the first ${cap} will run (server cap).`
+      : `<b>${n} combination${n === 1 ? '' : 's'}</b> will be run and measured.`;
+  }
+
+  function presetPaperVsRest() {
+    /* One axis varied at a time against the paper's own configuration: the
+       ablation you actually want, without a combinatorial blow-up. */
+    axisAll('axColorSpace', true);
+    axisAll('axUpsample',   false);
+    axisAll('axContrast',   false);
+    axisAll('axSR',         false);
+    check('axUpsample', ['hu_wbi']);
+    check('axContrast', ['clahe']);
+    check('axSR',       ['none']);
+    updateComboCount();
+  }
+  function check(containerId, ids) {
+    $(containerId).querySelectorAll('input').forEach(i => { if (ids.includes(i.value)) i.checked = true; });
+  }
+
+  async function runSweep() {
+    if (!currentFile) return;
+    loading('sweepBtn','sweepSpinner',true); hide('sweepErr');
+
+    const fd = baseFormData();
+    fd.append('color_spaces',     axisValues('axColorSpace').join(','));
+    fd.append('upsample_methods', axisValues('axUpsample').join(','));
+    fd.append('contrast_methods', axisValues('axContrast').join(','));
+    fd.append('sr_methods',       axisValues('axSR').join(','));
+    fd.append('work_size',        $('sweepSize').value);
+
+    try {
+      const res  = await fetch('/compare', { method:'POST', body:fd });
+      const data = await res.json();
+      if (!res.ok) { showErr('sweepErr', data.error || 'Server error'); return; }
+      sweepRows = data.rows;
+      lastSweep = data;
+      sortState = { key: null, dir: -1 };
+      renderSweep(data);
+    } catch(e) {
+      showErr('sweepErr', 'Network error: ' + e.message);
+    } finally {
+      loading('sweepBtn','sweepSpinner',false);
+    }
+  }
+
+  function renderSweep(d) {
+    const total = d.rows.reduce((a, r) => a + r.elapsed, 0).toFixed(1);
+    $('sweepMeta').textContent =
+      `— ${d.count} variants at ${d.work_size}×${d.work_size}, ${total}s total`
+      + (d.truncated ? ' (list truncated by the server cap)' : '');
+
+    $('sweepHead').innerHTML = `<tr>
+      <th class="first">#</th><th class="first">Variant</th><th class="first"></th>
+      <th class="sortable" onclick="sortSweep('elapsed')" title="Wall-clock seconds for this variant">Sec</th>
+      ${SWEEP_COLS.map(([k, h]) => {
+        const info = OPTIONS.metric_info[k.replace(/^enhanced_/, '')] || {};
+        return `<th class="sortable" onclick="sortSweep('${k}')"
+                    title="${(info.desc||'').replace(/"/g,'&quot;')}">${h}</th>`;
+      }).join('')}
+    </tr>`;
+
+    /* best value per column, using each metric's own direction */
+    const best = {};
+    SWEEP_COLS.forEach(([k]) => {
+      const info = OPTIONS.metric_info[k.replace(/^enhanced_/, '')] || {};
+      if (info.better !== 'higher' && info.better !== 'lower') return;
+      const vals = sweepRows.map(r => r.flat[k]).filter(v => typeof v === 'number' && isFinite(v));
+      if (vals.length) best[k] = info.better === 'higher' ? Math.max(...vals) : Math.min(...vals);
+    });
+
+    $('sweepBody').innerHTML = sweepRows.map((r, i) => {
+      const c = r.config;
+      const sub = `${c.color_space} · ${c.upsample_method} · ${c.contrast_method} · ${c.sr_actual}`;
+      return `<tr>
+        <td class="first" style="color:var(--muted)">${i + 1}</td>
+        <td class="first"><img class="row-thumb" src="data:image/jpeg;base64,${r.thumb}" alt="" /></td>
+        <td class="first"><div class="m-name"><span>${r.label}</span>
+            <span class="m-desc">${sub}</span></div></td>
+        <td style="color:var(--muted)">${r.elapsed.toFixed(2)}</td>
+        ${SWEEP_COLS.map(([k, , dec]) => {
+          const v = r.flat[k];
+          const isBest = (k in best) && v === best[k];
+          return `<td class="${isBest ? 'best' : ''}">${typeof v === 'number' ? v.toFixed(dec) : '—'}</td>`;
+        }).join('')}
+      </tr>`;
+    }).join('');
+
+    $('dlSweepCsv').href = '/download/' + d.dl_csv;
+    $('sweepResults').style.display = 'block';
+    $('sweepResults').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  function sortSweep(key) {
+    sortState.dir = sortState.key === key ? -sortState.dir : -1;
+    sortState.key = key;
+    const get = r => key === 'elapsed' ? r.elapsed : r.flat[key];
+    sweepRows.sort((a, b) => (get(a) - get(b)) * sortState.dir);
+    /* re-render against the original response so the meta line (variant count,
+       resolution, truncation warning) and the CSV link survive sorting */
+    renderSweep(Object.assign({}, lastSweep, { rows: sweepRows }));
+  }
+
   /* ── slider ── */
   function initSlider() {
-    const wrap    = $('sliderWrap');
-    const overlay = $('sliderOverlay');
-    const line    = $('sliderLine');
-    const knob    = $('sliderKnob');
-    let   drag    = false;
+    const wrap = $('sliderWrap'), overlay = $('sliderOverlay');
+    const line = $('sliderLine'), knob = $('sliderKnob');
+    let drag = false;
 
     function move(x) {
       const r   = wrap.getBoundingClientRect();
       const pct = Math.min(1, Math.max(0, (x - r.left) / r.width));
       const p   = (pct * 100).toFixed(2) + '%';
-      overlay.style.width = p;
-      line.style.left     = p;
-      knob.style.left     = p;
+      overlay.style.width = p; line.style.left = p; knob.style.left = p;
     }
-
-    wrap.addEventListener('mousedown',  e => { drag = true;  move(e.clientX); });
-    window.addEventListener('mousemove', e => { if (drag) move(e.clientX); });
-    window.addEventListener('mouseup',   () => drag = false);
-    wrap.addEventListener('touchstart',  e => { drag = true;  move(e.touches[0].clientX); }, {passive:true});
-    window.addEventListener('touchmove', e => { if (drag) move(e.touches[0].clientX); }, {passive:true});
-    window.addEventListener('touchend',  () => drag = false);
-
-    /* default 50 % */
+    if (wrap.dataset.bound !== '1') {
+      wrap.addEventListener('mousedown',   e => { drag = true; move(e.clientX); });
+      window.addEventListener('mousemove', e => { if (drag) move(e.clientX); });
+      window.addEventListener('mouseup',   () => drag = false);
+      wrap.addEventListener('touchstart',  e => { drag = true; move(e.touches[0].clientX); }, {passive:true});
+      window.addEventListener('touchmove', e => { if (drag) move(e.touches[0].clientX); }, {passive:true});
+      window.addEventListener('touchend',  () => drag = false);
+      wrap.dataset.bound = '1';
+    }
     const r = wrap.getBoundingClientRect();
     move(r.left + r.width / 2);
   }
@@ -520,23 +1056,14 @@
   }
 
   /* ── ui helpers ── */
-  function setLoading(on) {
-    $('runBtn').disabled           = on || !currentFile;
-    $('spinner').style.display     = on ? 'block' : 'none';
+  function loading(btnId, spinnerId, on) {
+    $(btnId).disabled = on || !currentFile;
+    $(spinnerId).style.display = on ? 'block' : 'none';
   }
-  function showErr(msg) { const e=$('err'); e.textContent='⚠ '+msg; e.style.display='block'; }
-  function hideErr()    { $('err').style.display='none'; }
+  function showErr(id, msg) { const e = $(id); e.textContent = '⚠ ' + msg; e.style.display = 'block'; }
+  function hide(id) { $(id).style.display = 'none'; }
 
-  function reset() {
-    currentFile = null;
-    fi.value    = '';
-    $('runBtn').disabled            = true;
-    $('previewStrip').style.display = 'none';
-    $('results').style.display      = 'none';
-    $('visualPunch').checked        = false;
-    $('punchParams').style.display  = 'none';
-    hideErr();
-  }
+  $('useColorTransfer').addEventListener('change', onStageChange);
 </script>
 </body>
 </html>

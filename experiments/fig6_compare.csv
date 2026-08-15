@@ -1,0 +1,7 @@
+config,psnr,ssim,entropy,eme,cii,r_minus_b,delta_e,sr_actual
+"CLAHE only (no SR, no colour xfer)",21.2795,0.9161,7.568,41.1166,0.9982,37.516,6.1447,none
+CLAHE + colour transfer,24.944,0.8837,7.4294,15.9804,0.9989,41.5514,3.8242,none
+CLAHE + SRGAN-v,21.356,0.905,7.5746,40.4577,0.9885,37.8127,6.0455,srgan_v
+CLAHE + SRGAN-v + colour transfer  [paper defaults],24.9559,0.869,7.4436,17.0435,0.998,41.6697,3.7224,srgan_v
+CLAHE + SRGAN-v + colour transfer + visual punch,17.0289,0.8606,7.3897,16.1083,0.9844,96.8801,12.6697,srgan_v
+"CLAHE + Lanczos-detail SR (classical, no GAN) + colour transfer",24.3363,0.8285,7.4459,17.2825,1.004,41.5821,3.9824,lanczos_detail
